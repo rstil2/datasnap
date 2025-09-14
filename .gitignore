@@ -54,4 +54,4 @@ Thumbs.db
 # Project specific
 uploads/
 *.csv
-local_storage/
+local_storage/backend/uploads/
