@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Union
 from pydantic_settings import BaseSettings
 from pydantic import EmailStr, validator
 
@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:5173"]  # React Vite default port
+    BACKEND_CORS_ORIGINS: str = "http://localhost:5173"  # React Vite default port
 
     # PostgreSQL
     POSTGRES_SERVER: str
