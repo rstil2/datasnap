@@ -56,3 +56,7 @@ uploads/
 *.csv
 local_storage/backend/uploads/
 frontend/.env
+
+# Docker
+.docker/
+.env
