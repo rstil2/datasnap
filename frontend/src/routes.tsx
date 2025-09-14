@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { Profile } from './pages/Profile';
+import { Files } from './pages/Files';
 import { useAuth } from './contexts/AuthContext';
 
 interface ProtectedRouteProps {
@@ -44,6 +45,14 @@ export const AppRoutes: React.FC = () => {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/files"
+        element={
+          <ProtectedRoute>
+            <Files />
           </ProtectedRoute>
         }
       />
