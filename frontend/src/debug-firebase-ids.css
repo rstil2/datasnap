@@ -1,0 +1,25 @@
+/* Debug CSS to highlight any text that might be Firebase IDs */
+
+/* Highlight any text content that's longer than 20 characters */
+*:not(script):not(style) {
+  position: relative;
+}
+
+/* Add red border around elements with very long text content */
+*:not(script):not(style):not(html):not(body)::before {
+  content: attr(data-long-text);
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 2px solid red;
+  pointer-events: none;
+  z-index: 10000;
+  display: none;
+}
+
+/* Show border when text is very long */
+*[data-firebase-id]::before {
+  display: block;
+}

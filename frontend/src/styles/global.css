@@ -1,0 +1,537 @@
+/* Professional Dark Theme Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Theme-Specific Variables */
+/* Ultra-Professional Mac Dark Theme */
+:root,
+:root[data-theme='dark'] {
+  /* Enhanced Dark Theme Colors - True macOS System Colors */
+  --bg-primary: #1c1c1e;      /* macOS System Background */
+  --bg-secondary: #2c2c2e;    /* macOS Secondary Background */
+  --bg-tertiary: #3a3a3c;     /* macOS Tertiary Background */
+  --bg-elevated: #48484a;     /* macOS Elevated Surface */
+  --bg-glass: rgba(28, 28, 30, 0.7);  /* Translucent Glass Effect */
+  --bg-overlay: rgba(0, 0, 0, 0.4);   /* Reduced overlay for elegance */
+  
+  /* Enhanced Text Colors - macOS System Text */
+  --text-primary: #ffffff;        /* Primary Label */
+  --text-secondary: #ebebf5;      /* Secondary Label (60% opacity) */
+  --text-tertiary: #ebebf5;       /* Tertiary Label (30% opacity) */ 
+  --text-quaternary: #ebebf5;     /* Quaternary Label (18% opacity) */
+  --text-muted: #8e8e93;          /* System Gray */
+  --text-inverse: #000000;
+  
+  /* macOS System Accent Colors */
+  --accent-primary: #007AFF;      /* System Blue (macOS default) */
+  --accent-primary-hover: #0051D5; /* Blue hover state */
+  --accent-primary-active: #003D99; /* Blue active state */
+  --accent-secondary: #5856D6;    /* System Purple */
+  --accent-gradient: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+  --accent-glass: rgba(0, 122, 255, 0.1); /* Translucent accent */
+  
+  /* macOS System Semantic Colors */
+  --success: #30D158;             /* System Green */
+  --success-light: rgba(48, 209, 88, 0.15);
+  --warning: #FF9F0A;             /* System Orange */
+  --warning-light: rgba(255, 159, 10, 0.15);
+  --error: #FF453A;               /* System Red */
+  --error-light: rgba(255, 69, 58, 0.15);
+  --error-dark: #D70015;          /* System Red Dark */
+  --info: #64D2FF;                /* System Cyan */
+  --info-light: rgba(100, 210, 255, 0.15);
+  
+  /* Accent Light Colors */
+  --accent-light: rgba(0, 122, 255, 0.1);
+  
+  /* Enhanced Border Colors - More Subtle */
+  --border-primary: rgba(255, 255, 255, 0.08);   /* Subtle separator */
+  --border-secondary: rgba(255, 255, 255, 0.12); /* Visible border */
+  --border-tertiary: rgba(255, 255, 255, 0.16);  /* Emphasized border */
+  --border-subtle: rgba(255, 255, 255, 0.04);    /* Barely visible */
+  --border-focus: var(--accent-primary);
+  
+  /* Enhanced Shadow System - Sophisticated & Subtle */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);      /* Minimal elevation */
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);    /* Card elevation */
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);    /* Panel elevation */
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);    /* Modal elevation */
+  --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Inset shadow */
+  --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.15); /* Accent glow */
+  --shadow-focus: 0 0 0 3px rgba(0, 122, 255, 0.2); /* Focus ring */
+  
+  /* Enhanced Typography - True macOS Font System */
+  --font-family-primary: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-family-mono: 'SF Mono', Monaco, 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+  --font-family-rounded: 'SF Pro Rounded', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Font Weights - macOS System */
+  --font-weight-ultralight: 100;
+  --font-weight-thin: 200;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-heavy: 800;
+  --font-weight-black: 900;
+  
+  /* Enhanced Spacing System - Perfect 8pt Grid */
+  --space-1: 0.125rem;  /* 2px */
+  --space-2: 0.25rem;   /* 4px */
+  --space-3: 0.375rem;  /* 6px */
+  --space-4: 0.5rem;    /* 8px */
+  --space-5: 0.625rem;  /* 10px */
+  --space-6: 0.75rem;   /* 12px */
+  --space-8: 1rem;      /* 16px */
+  --space-10: 1.25rem;  /* 20px */
+  --space-12: 1.5rem;   /* 24px */
+  --space-16: 2rem;     /* 32px */
+  --space-20: 2.5rem;   /* 40px */
+  --space-24: 3rem;     /* 48px */
+  --space-32: 4rem;     /* 64px */
+  
+  /* Legacy spacing (for compatibility) */
+  --space-xs: var(--space-2);
+  --space-sm: var(--space-4);
+  --space-md: var(--space-8);
+  --space-lg: var(--space-12);
+  --space-xl: var(--space-16);
+  --space-2xl: var(--space-24);
+  
+  /* Enhanced Border Radius - macOS Style */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+  
+  /* Enhanced Transitions - Smooth & Natural */
+  --transition-fast: 200ms cubic-bezier(0.4, 0.0, 0.2, 1);      /* Quick hover states */
+  --transition-base: 300ms cubic-bezier(0.4, 0.0, 0.2, 1);      /* Default animations */
+  --transition-slow: 500ms cubic-bezier(0.4, 0.0, 0.2, 1);      /* Layout changes */
+  --transition-bounce: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Playful bounce */
+  --transition-spring: 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);   /* Spring effect */
+}
+
+/* Light Theme Variables */
+:root[data-theme='light'] {
+  /* Light Theme Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --bg-elevated: #ffffff;
+  --bg-glass: rgba(248, 249, 250, 0.8);  /* Light translucent glass effect */
+  --bg-overlay: rgba(255, 255, 255, 0.95);
+  
+  /* Text Colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-tertiary: #6a6a6a;
+  --text-muted: #8a8a8a;
+  --text-inverse: #ffffff;
+  
+  /* Accent Colors (same across themes) */
+  --accent-primary: #007AFF;
+  --accent-primary-hover: #0056CC;
+  --accent-primary-active: #003D99;
+  --accent-gradient: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+  --accent-glass: rgba(0, 122, 255, 0.1); /* Translucent accent */
+  
+  /* Semantic Colors (same across themes) */
+  --success: #30D158;
+  --success-light: rgba(48, 209, 88, 0.1);
+  --warning: #FF9F0A;
+  --warning-light: rgba(255, 159, 10, 0.1);
+  --error: #FF453A;
+  --error-light: rgba(255, 69, 58, 0.1);
+  --error-dark: #cc2c24;
+  --info: #64D2FF;
+  --info-light: rgba(100, 210, 255, 0.1);
+  
+  /* Accent Light Colors */
+  --accent-light: rgba(0, 122, 255, 0.1);
+  
+  /* Border Colors */
+  --border-primary: #e1e5e9;
+  --border-secondary: #d1d9e0;
+  --border-tertiary: #cbd5e1;  /* Emphasized border */
+  --border-subtle: #f1f3f5;
+  --border-focus: var(--accent-primary);
+  
+  /* Shadow System (adjusted for light theme) */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-glow: 0 0 20px rgba(0, 122, 255, 0.2);
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  font-size: 15px;                    /* Slightly larger for better readability */
+  font-weight: var(--font-weight-regular);
+  line-height: 1.5;                   /* Tighter for a more compact feel */
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  letter-spacing: -0.01em;            /* Subtle letter spacing optimization */
+  
+  /* Enhanced font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-variant-ligatures: common-ligatures;
+  
+  /* Layout */
+  height: 100vh;
+  overflow: hidden;
+  
+  /* Enhanced scroll behavior */
+  scroll-behavior: smooth;
+}
+
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Professional Focus States */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--accent-primary);
+  color: var(--text-inverse);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Button Reset */
+button {
+  font: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Media */
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Links */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+/* Typography Scale */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  color: var(--text-secondary);
+}
+
+/* Utility Classes */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-tertiary { background-color: var(--bg-tertiary); }
+.bg-elevated { background-color: var(--bg-elevated); }
+
+/* Common Page Layouts */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.page-header {
+  margin-bottom: var(--space-2xl);
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+  letter-spacing: -0.025em;
+}
+
+.page-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Enhanced Cards - Ultra-Professional */
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);        /* Larger radius for modern look */
+  padding: var(--space-20);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  backdrop-filter: blur(20px);            /* Glass morphism effect */
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px) scale(1.005); /* Subtle scale for elegance */
+  border-color: var(--border-secondary);
+}
+
+.card:active {
+  transform: translateY(-1px) scale(1.002);
+  transition: all var(--transition-fast);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.card-content {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #28a745;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-disabled {
+  background: var(--text-muted);
+  color: white;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Status Messages */
+.status-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin: var(--space-md) 0;
+}
+
+.status-success {
+  background: rgba(48, 209, 88, 0.1);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.status-error {
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid var(--error);
+  color: var(--error);
+}
+
+.status-warning {
+  background: rgba(255, 159, 10, 0.1);
+  border: 1px solid var(--warning);
+  color: var(--warning);
+}
+
+.status-info {
+  background: rgba(100, 210, 255, 0.1);
+  border: 1px solid var(--info);
+  color: var(--info);
+}
+
+/* Loading States */
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Flex Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-start { justify-content: flex-start; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1; }
+.flex-none { flex: none; }
+
+/* Spacing Utilities */
+.gap-xs { gap: var(--space-xs); }
+.gap-sm { gap: var(--space-sm); }
+.gap-md { gap: var(--space-md); }
+.gap-lg { gap: var(--space-lg); }
+.gap-xl { gap: var(--space-xl); }
+.gap-2xl { gap: var(--space-2xl); }
+
+.m-0 { margin: 0; }
+.mb-sm { margin-bottom: var(--space-sm); }
+.mb-md { margin-bottom: var(--space-md); }
+.mb-lg { margin-bottom: var(--space-lg); }
+.mb-xl { margin-bottom: var(--space-xl); }
+.mb-2xl { margin-bottom: var(--space-2xl); }
+
+.mt-sm { margin-top: var(--space-sm); }
+.mt-md { margin-top: var(--space-md); }
+.mt-lg { margin-top: var(--space-lg); }
+.mt-xl { margin-top: var(--space-xl); }
+.mt-2xl { margin-top: var(--space-2xl); }
+
+/* Text Utilities */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.font-mono { font-family: var(--font-family-mono); }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+
+/* Width/Height Utilities */
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.max-w-4xl { max-width: 56rem; }
+.max-w-lg { max-width: 32rem; }
+
+/* Overflow */
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-y-auto { overflow-y: auto; }
+.overflow-x-auto { overflow-x: auto; }
