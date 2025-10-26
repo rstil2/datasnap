@@ -1,43 +1,28 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, ConfigDict
-from datetime import datetime
-
+from pydantic import BaseModel, EmailStr
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = True
+    is_superuser: bool = False
     full_name: Optional[str] = None
-    is_active: bool = True
-
 
 class UserCreate(UserBase):
+    email: EmailStr
     password: str
 
-
-class UserCreateOAuth(UserBase):
-    oauth_provider: str
-    oauth_id: str
-
-
-class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    full_name: Optional[str] = None
+class UserUpdate(UserBase):
     password: Optional[str] = None
 
+class User(UserBase):
+    id: Optional[int] = None
 
-class UserInDBBase(UserBase):
-    id: str
-    is_superuser: bool = False
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-    oauth_provider: Optional[str] = None
-    
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
-class User(UserInDBBase):
-    pass
-
-
-class UserInDB(UserInDBBase):
-    hashed_password: Optional[str] = None
-    oauth_id: Optional[str] = None
+class TokenPayload(BaseModel):
+    sub: Optional[int] = None

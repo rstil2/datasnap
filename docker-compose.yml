@@ -1,64 +1,49 @@
-version: '3.8'
-
 services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
+      dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
     depends_on:
       - backend
-    networks:
-      - datasnap-network
-    environment:
-      - VITE_API_URL=http://localhost:8000/api/v1
-      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+      dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/app
-      - backend_uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://datasnap:datasnap@db:5432/datasnap
+      - SECRET_KEY=${SECRET_KEY:-c49ed66c5c3c43ab80b95d9762209ccf}
+      - ENVIRONMENT=development
+      - CORS_ORIGINS=http://localhost:5173
     depends_on:
       - db
-    networks:
-      - datasnap-network
-    environment:
-      - POSTGRES_SERVER=db
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - SECRET_KEY=${SECRET_KEY}
-      - FIRST_SUPERUSER=${FIRST_SUPERUSER}
-      - FIRST_SUPERUSER_PASSWORD=${FIRST_SUPERUSER_PASSWORD}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
 
   db:
-    image: postgres:15-alpine
-    ports:
-      - "5432:5432"
+    image: postgres:16-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - datasnap-network
+    ports:
+      - "5432:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
-  backend_uploads:
-
-networks:
-  datasnap-network:
-    driver: bridge

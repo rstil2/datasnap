@@ -1,44 +1,23 @@
-from typing import Optional, List, Union
-from pydantic_settings import BaseSettings
-from pydantic import EmailStr, validator
-
+from typing import List
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "DataSnap"
-    VERSION: str = "0.1.0"
-    API_V1_STR: str = "/api/v1"
+    DATABASE_URL: str
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
-    BACKEND_CORS_ORIGINS: str = "http://localhost:5173"  # React Vite default port
+    ENVIRONMENT: str = "development"
+    CORS_ORIGINS: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    API_V1_STR: str = "/api/v1"
+    UPLOAD_DIR: str = "./uploads"
 
-    # PostgreSQL
-    POSTGRES_SERVER: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_DB: str
-    SQLALCHEMY_DATABASE_URI: Optional[str] = None
+    @property
+    def CORS_ORIGINS_LIST(self) -> List[str]:
+        if not self.CORS_ORIGINS:
+            return []
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
 
-    # First superuser
-    FIRST_SUPERUSER: EmailStr
-    FIRST_SUPERUSER_PASSWORD: str
-
-    # Google OAuth
-    GOOGLE_CLIENT_ID: str
-    GOOGLE_CLIENT_SECRET: str
-
-    # File upload
-    UPLOAD_FOLDER: str = "uploads"
-    MAX_CONTENT_LENGTH: int = 16 * 1024 * 1024  # 16MB
-
-    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
-    def assemble_db_connection(cls, v: Optional[str], values: dict) -> str:
-        if v:
-            return v
-        return f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}/{values.get('POSTGRES_DB')}"
-
-    class Config:
-        case_sensitive = True
-        env_file = ".env"
-
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()

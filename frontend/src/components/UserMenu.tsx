@@ -3,7 +3,7 @@ import { ChevronDown, LogOut, User, Settings, Crown, Zap } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { SubscriptionService } from '../services/SubscriptionService';
-import { SignInModal } from './SignInModal';
+import { FirebaseSignInModal } from './FirebaseSignInModal';
 import { SettingsModal } from './SettingsModal';
 
 export function UserMenu() {
@@ -28,9 +28,14 @@ export function UserMenu() {
     }
   }, [isDropdownOpen]);
 
-  const handleSignOut = () => {
-    signOut();
-    setIsDropdownOpen(false);
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setIsDropdownOpen(false);
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setIsDropdownOpen(false);
+    }
   };
 
   if (!isAuthenticated || !user) {
@@ -57,7 +62,7 @@ export function UserMenu() {
           Sign In
         </button>
         
-        <SignInModal 
+        <FirebaseSignInModal 
           isOpen={isSignInModalOpen} 
           onClose={() => setIsSignInModalOpen(false)} 
         />
@@ -162,12 +167,14 @@ export function UserMenu() {
                   }}>
                     {user.name}
                   </div>
-                  <div style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--text-secondary)'
-                  }}>
-                    Member since {new Date(user.joinedAt).toLocaleDateString()}
-                  </div>
+                  {user.joinedAt && (
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--text-secondary)'
+                    }}>
+                      Member since {new Date(user.joinedAt).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -179,8 +186,8 @@ export function UserMenu() {
                 color: 'var(--text-secondary)'
               }}>
                 <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-                  <span>{user.storiesCount} stories</span>
-                  <span>{user.totalLikes} likes</span>
+                  <span>{user.storiesCount || 0} stories</span>
+                  <span>{user.totalLikes || 0} likes</span>
                 </div>
                 <div style={{
                   display: 'flex',

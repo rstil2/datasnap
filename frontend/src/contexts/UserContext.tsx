@@ -64,6 +64,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       name: displayName,
       email: firebaseUser.email || '',
       avatar: '👤', // Always use emoji instead of URL
+      joinedAt: new Date().toISOString(),
+      storiesCount: 0,
+      totalLikes: 0,
       preferences: {
         theme: 'light',
         notifications: true,

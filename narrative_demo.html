@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataSnap AI Narrative Generation Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #2d3748;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .narrative-display {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .narrative-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .narrative-summary {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .narrative-content {
+            line-height: 1.7;
+            white-space: pre-line;
+        }
+        
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .insight-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #48bb78;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .insight-card.high {
+            border-left-color: #f56565;
+        }
+        
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .insight-description {
+            color: #4a5568;
+            font-size: 0.95em;
+        }
+        
+        .recommendations {
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .recommendations ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .recommendations li {
+            margin: 8px 0;
+        }
+        
+        .metadata {
+            font-size: 0.85em;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+        
+        .error {
+            background: rgba(245, 101, 101, 0.1);
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📖 DataSnap AI Narrative Generation</h1>
+        <p>Transform statistical results into intelligent, human-readable stories</p>
+    </div>
+    
+    <div class="demo-section">
+        <h2>🧪 Live Demo</h2>
+        <p>Click a button below to generate an AI-powered narrative from different statistical test results:</p>
+        
+        <button class="test-button" onclick="generateNarrative('ttest')">📊 T-Test Results</button>
+        <button class="test-button" onclick="generateNarrative('correlation')">📈 Correlation Analysis</button>
+        <button class="test-button" onclick="generateNarrative('anova')">🔬 ANOVA Results</button>
+        <button class="test-button" onclick="generateNarrative('data_summary')">📋 Data Summary</button>
+        
+        <div id="narrativeOutput"></div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>✨ Features</h2>
+        <ul>
+            <li><strong>🎯 Plain English Explanations</strong> - Statistical jargon translated into accessible insights</li>
+            <li><strong>🔍 Key Insights Extraction</strong> - Automatically identifies the most important findings</li>
+            <li><strong>💡 Actionable Recommendations</strong> - Suggests concrete next steps based on results</li>
+            <li><strong>⚡ Lightning Fast</strong> - Generated in milliseconds using intelligent templates</li>
+            <li><strong>📊 Multiple Test Types</strong> - Supports t-tests, ANOVA, correlation, chi-square, and more</li>
+            <li><strong>🎨 Rich Formatting</strong> - Beautiful presentation with emojis, sections, and priority indicators</li>
+        </ul>
+    </div>
+
+    <script>
+        const testData = {
+            ttest: {
+                narrative_type: "statistical_test",
+                test_name: "Independent T-Test",
+                test_statistic: 2.45,
+                p_value: 0.02,
+                sample_size: 100,
+                effect_size: 0.6,
+                columns: ["treatment_group", "outcome_score"],
+                group_statistics: {
+                    group_a_mean: 75.3,
+                    group_b_mean: 68.1,
+                    group_a_std: 12.4,
+                    group_b_std: 15.2
+                }
+            },
+            correlation: {
+                narrative_type: "statistical_test", 
+                test_name: "Pearson Correlation",
+                test_statistic: 0.87,
+                p_value: 0.001,
+                sample_size: 150,
+                columns: ["marketing_spend", "revenue"]
+            },
+            anova: {
+                narrative_type: "statistical_test",
+                test_name: "One-Way ANOVA", 
+                test_statistic: 8.45,
+                p_value: 0.003,
+                sample_size: 200,
+                effect_size: 0.12,
+                degrees_of_freedom: 2,
+                columns: ["region", "sales_performance"]
+            },
+            data_summary: {
+                narrative_type: "data_summary",
+                total_rows: 1500,
+                total_columns: 8,
+                missing_values: {age: 12, income: 5},
+                column_types: {age: "numeric", income: "numeric", category: "categorical"},
+                data_quality_score: 0.85,
+                outliers_detected: {income: 3}
+            }
+        };
+
+        async function generateNarrative(testType) {
+            const output = document.getElementById('narrativeOutput');
+            output.innerHTML = '<div class="loading">🤖 Generating narrative...</div>';
+            
+            try {
+                const endpoint = testType === 'data_summary' ? 'data-summary' : 'statistical-test';
+                const response = await fetch(`http://localhost:8000/api/v1/narratives/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData[testType])
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const narrative = await response.json();
+                displayNarrative(narrative);
+                
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayNarrative(narrative) {
+            const output = document.getElementById('narrativeOutput');
+            
+            const insightsHtml = narrative.key_insights.map(insight => `
+                <div class="insight-card ${insight.priority}">
+                    <div class="insight-title">${getPriorityIcon(insight.priority)} ${insight.title}</div>
+                    <div class="insight-description">${insight.description}</div>
+                </div>
+            `).join('');
+            
+            const recommendationsHtml = narrative.recommendations.length > 0 ? `
+                <div class="recommendations">
+                    <strong>💡 Recommendations:</strong>
+                    <ul>
+                        ${narrative.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : '';
+            
+            output.innerHTML = `
+                <div class="narrative-display">
+                    <div class="narrative-title">${narrative.title}</div>
+                    <div class="narrative-summary">🎯 <strong>Key Finding:</strong> ${narrative.summary}</div>
+                    <div class="narrative-content">${narrative.content.replace(/\\n/g, '\\n').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+                    
+                    ${narrative.key_insights.length > 0 ? `
+                        <h3>🔍 Key Insights</h3>
+                        <div class="insights-grid">${insightsHtml}</div>
+                    ` : ''}
+                    
+                    ${recommendationsHtml}
+                    
+                    <div class="metadata">
+                        Generated in ${narrative.metadata.generation_time_ms}ms using ${getMethodLabel(narrative.metadata.generation_method)} 
+                        • ${new Date(narrative.metadata.generated_at).toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getPriorityIcon(priority) {
+            const icons = {
+                critical: '🚨',
+                high: '⚠️', 
+                medium: '📌',
+                low: '💡',
+                info: 'ℹ️'
+            };
+            return icons[priority] || '📝';
+        }
+
+        function getMethodLabel(method) {
+            const labels = {
+                template: 'Rule-based Templates',
+                cloud_ai: 'AI-Powered (Cloud)',
+                local_ai: 'AI-Powered (Local)', 
+                hybrid: 'AI + Templates'
+            };
+            return labels[method] || 'Unknown';
+        }
+        
+        // Auto-generate a t-test narrative on page load
+        window.onload = () => {
+            setTimeout(() => generateNarrative('ttest'), 1000);
+        };
+    </script>
+</body>
+</html>

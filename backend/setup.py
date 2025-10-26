@@ -1,0 +1,24 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="datasnap",
+    version="0.1.0",
+    packages=find_packages(),
+    install_requires=[
+        "fastapi>=0.116.0",
+        "uvicorn[standard]>=0.35.0",
+        "sqlalchemy>=2.0.43",
+        "alembic>=1.16.5",
+        "psycopg2-binary>=2.9.10",
+        "python-jose[cryptography]>=3.5.0",
+        "passlib[bcrypt]>=1.7.4",
+        "python-multipart>=0.0.20",
+        "pydantic-settings>=2.10.1",
+        "pytest>=8.4.2",
+        "pytest-asyncio>=1.2.0",
+        "httpx>=0.28.1",
+        "pandas>=2.1.0",
+        "numpy>=1.24.0",
+        "email-validator>=2.2.0",
+    ],
+)

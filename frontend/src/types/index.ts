@@ -209,14 +209,17 @@ export interface ValidationResult {
 export interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   avatar: string;
-  preferences: {
-    theme: 'light' | 'dark' | 'auto';
-    notifications: boolean;
-    dataRetention: number;
+  joinedAt?: string;
+  storiesCount?: number;
+  totalLikes?: number;
+  preferences?: {
+    theme?: 'light' | 'dark' | 'auto';
+    notifications?: boolean;
+    dataRetention?: number;
   };
-  subscription: {
+  subscription?: {
     tier: 'free' | 'pro' | 'enterprise';
     expiresAt: string | null;
     features: {
