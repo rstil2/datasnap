@@ -321,7 +321,7 @@ export const LazyChart: React.FC<LazyChartProps> = ({
       fallback={lazyProps.fallback || chartFallback}
       onLoad={() => {
         // Track chart load for analytics
-        console.log(`Chart loaded: ${chartType}`);
+        // Chart loaded successfully
         lazyProps.onLoad?.();
       }}
     />

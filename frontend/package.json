@@ -30,8 +30,10 @@
     "build:prod": "cross-env NODE_ENV=production webpack --mode production",
     "electron:build": "npm run build:prod && electron-builder build --mac --win",
     "electron:build:mac": "npm run build:prod && electron-builder build --mac",
+    "electron:build:mas": "npm run build:prod && electron-builder build --mac --config.mac.target=mas",
     "electron:build:win": "npm run build:prod && electron-builder build --win",
     "electron:dist": "npm run build:prod && electron-builder build --mac --win --publish=never",
+    "electron:dist:mas": "npm run build:prod && electron-builder build --mac --config.mac.target=mas --publish=never",
     "type-check": "tsc --noEmit",
     "format": "prettier --write src/**/*.{ts,tsx}",
     "format:check": "prettier --check src/**/*.{ts,tsx}"

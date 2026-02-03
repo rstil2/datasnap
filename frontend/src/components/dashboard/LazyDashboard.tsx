@@ -428,7 +428,7 @@ export const DashboardExample: React.FC = () => {
   ]);
 
   const handleChartLoad = useCallback((chartId: string) => {
-    console.log(`Chart loaded: ${chartId}`);
+    // Chart loaded successfully
   }, []);
 
   const handleChartError = useCallback((error: Error, chartId: string) => {

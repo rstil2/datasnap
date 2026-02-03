@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.api import deps
+from app.models.user import User
 from app.schemas.visualizations import (
     ScatterPlotRequest,
     HistogramRequest,
@@ -16,11 +18,25 @@ from app.services.visualization_service import VisualizationService
 
 router = APIRouter()
 
+async def get_optional_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(deps.get_db),
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        token = authorization.replace("Bearer ", "")
+        return await deps.get_current_user(token=token, db=db)
+    except (HTTPException, Exception):
+        return None
+
 
 @router.post("/scatter", response_model=VisualizationResponse)
 async def create_scatter_plot(
     request: ScatterPlotRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> VisualizationResponse:
     """
     Create a scatter plot visualization.
@@ -35,12 +51,13 @@ async def create_scatter_plot(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await VisualizationService.create_scatter_plot(
@@ -71,6 +88,7 @@ async def create_scatter_plot(
 async def create_histogram(
     request: HistogramRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> VisualizationResponse:
     """
     Create a histogram visualization.
@@ -85,12 +103,13 @@ async def create_histogram(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await VisualizationService.create_histogram(
@@ -120,6 +139,7 @@ async def create_histogram(
 async def create_boxplot(
     request: BoxplotRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> VisualizationResponse:
     """
     Create a boxplot visualization.
@@ -134,12 +154,13 @@ async def create_boxplot(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await VisualizationService.create_boxplot(
@@ -168,6 +189,7 @@ async def create_boxplot(
 async def get_chart_suggestions(
     file_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> ChartSuggestionsResponse:
     """
     Get chart suggestions based on data characteristics.
@@ -182,12 +204,13 @@ async def get_chart_suggestions(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await VisualizationService.suggest_charts(

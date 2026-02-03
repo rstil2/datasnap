@@ -55,3 +55,28 @@ def get_current_active_user(
             detail="Inactive user"
         )
     return current_user
+
+async def get_optional_current_user(
+    authorization: Optional[str] = Depends(lambda: None),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None.
+    This allows endpoints to work with or without authentication."""
+    # Check Authorization header manually since we want optional auth
+    from fastapi import Request
+    try:
+        # This will be set by the endpoint using Header() dependency
+        if hasattr(authorization, 'authorization'):
+            auth_header = authorization.authorization
+        else:
+            return None
+    except:
+        return None
+    
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    try:
+        token = auth_header.replace("Bearer ", "")
+        return await get_current_user(token=token, db=db)
+    except (HTTPException, Exception):
+        return None

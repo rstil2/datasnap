@@ -10,6 +10,10 @@ from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 from jinja2 import Environment, BaseLoader, TemplateSyntaxError, UndefinedError
 from sqlalchemy.orm import Session
+try:
+    import requests
+except ImportError:
+    requests = None
 
 from app.schemas.narratives import (
     NarrativeRequest, StatisticalTestNarrativeRequest, DataSummaryNarrativeRequest, 
@@ -81,11 +85,11 @@ class NarrativeService:
             if generation_method == GenerationMethod.TEMPLATE:
                 response = self._generate_template_narrative(request)
             elif generation_method == GenerationMethod.CLOUD_AI:
-                # Placeholder for AI integration (will be implemented in next task)
-                response = self._generate_template_narrative(request)  # Fallback for now
+                # Cloud AI uses hybrid approach with template fallback
+                response = self._generate_hybrid_narrative(request)
             elif generation_method == GenerationMethod.LOCAL_AI:
-                # Placeholder for local AI integration
-                response = self._generate_template_narrative(request)  # Fallback for now
+                # Local AI uses hybrid approach with template fallback
+                response = self._generate_hybrid_narrative(request)
             else:  # HYBRID
                 response = self._generate_hybrid_narrative(request)
             
@@ -112,9 +116,37 @@ class NarrativeService:
         if request.generation_method:
             return request.generation_method
         
-        # Default to template for reliable generation
-        # TODO: Add AI availability checks here
-        return GenerationMethod.TEMPLATE
+        # Check AI availability
+        if self._is_ai_available():
+            # If AI is available and user hasn't specified, use hybrid approach
+            return GenerationMethod.HYBRID
+        else:
+            # Default to template for reliable generation when AI is unavailable
+            return GenerationMethod.TEMPLATE
+    
+    def _is_ai_available(self) -> bool:
+        """Check if AI services are available and configured"""
+        import os
+        
+        # Check for OpenAI API key
+        openai_key = os.getenv('OPENAI_API_KEY') or os.getenv('OPENAI_KEY')
+        if openai_key:
+            return True
+        
+        # Check for Anthropic API key
+        anthropic_key = os.getenv('ANTHROPIC_API_KEY') or os.getenv('CLAUDE_API_KEY')
+        if anthropic_key:
+            return True
+        
+        # Check for custom AI endpoint
+        ai_endpoint = os.getenv('AI_NARRATIVE_ENDPOINT') or os.getenv('AI_SERVICE_URL')
+        if ai_endpoint:
+            return True
+        
+        # Check configuration flag
+        ai_enabled = os.getenv('ENABLE_AI_NARRATIVES', 'false').lower() == 'true'
+        
+        return ai_enabled
     
     def _generate_template_narrative(
         self,
@@ -173,9 +205,104 @@ class NarrativeService:
     def _generate_hybrid_narrative(self, request: NarrativeRequest) -> NarrativeResponse:
         """Generate narrative using hybrid approach (AI + template fallback)"""
         
-        # For now, fallback to template generation
-        # TODO: Implement AI generation with template fallback
+        try:
+            # Try AI generation first
+            ai_response = self._generate_ai_narrative(request)
+            if ai_response:
+                return ai_response
+        except Exception as e:
+            logger.warning(f"AI generation failed, falling back to template: {str(e)}")
+        
+        # Fallback to template generation
         return self._generate_template_narrative(request)
+    
+    def _generate_ai_narrative(self, request: NarrativeRequest) -> Optional[NarrativeResponse]:
+        """Generate narrative using AI service (OpenAI, Anthropic, or custom endpoint)"""
+        
+        import os
+        
+        # Try OpenAI first
+        openai_key = os.getenv('OPENAI_API_KEY') or os.getenv('OPENAI_KEY')
+        if openai_key:
+            try:
+                return self._generate_with_openai(request, openai_key)
+            except Exception as e:
+                logger.warning(f"OpenAI generation failed: {str(e)}")
+        
+        # Try Anthropic
+        anthropic_key = os.getenv('ANTHROPIC_API_KEY') or os.getenv('CLAUDE_API_KEY')
+        if anthropic_key:
+            try:
+                return self._generate_with_anthropic(request, anthropic_key)
+            except Exception as e:
+                logger.warning(f"Anthropic generation failed: {str(e)}")
+        
+        # Try custom endpoint
+        ai_endpoint = os.getenv('AI_NARRATIVE_ENDPOINT') or os.getenv('AI_SERVICE_URL')
+        if ai_endpoint:
+            try:
+                return self._generate_with_custom_endpoint(request, ai_endpoint)
+            except Exception as e:
+                logger.warning(f"Custom AI endpoint failed: {str(e)}")
+        
+        return None
+    
+    def _generate_with_openai(self, request: NarrativeRequest, api_key: str) -> NarrativeResponse:
+        """Generate narrative using OpenAI API"""
+        # OpenAI integration requires openai Python package
+        # When implemented, this would call OpenAI's API
+        logger.info("OpenAI integration requires additional setup. Using template fallback.")
+        raise NotImplementedError("OpenAI integration requires 'openai' package installation")
+    
+    def _generate_with_anthropic(self, request: NarrativeRequest, api_key: str) -> NarrativeResponse:
+        """Generate narrative using Anthropic Claude API"""
+        # Anthropic integration requires anthropic Python package
+        # When implemented, this would call Anthropic's API
+        logger.info("Anthropic integration requires additional setup. Using template fallback.")
+        raise NotImplementedError("Anthropic integration requires 'anthropic' package installation")
+    
+    def _generate_with_custom_endpoint(self, request: NarrativeRequest, endpoint: str) -> NarrativeResponse:
+        """Generate narrative using custom AI endpoint"""
+        if requests is None:
+            raise NotImplementedError("Custom AI endpoint requires 'requests' package installation")
+        
+        try:
+            response = requests.post(
+                endpoint,
+                json={
+                    "narrative_type": request.narrative_type.value if hasattr(request.narrative_type, 'value') else str(request.narrative_type),
+                    "request_data": self._prepare_template_context(request)
+                },
+                timeout=30,
+                headers={"Content-Type": "application/json"}
+            )
+            response.raise_for_status()
+            
+            # Parse response - expects NarrativeResponse format
+            response_data = response.json()
+            
+            # Convert to NarrativeResponse
+            from app.schemas.narratives import NarrativeResponse, NarrativeMetadata, GenerationMethod
+            
+            return NarrativeResponse(
+                narrative_type=response_data.get('narrative_type', request.narrative_type),
+                title=response_data.get('title', 'AI-Generated Narrative'),
+                summary=response_data.get('summary', ''),
+                content=response_data.get('content', ''),
+                key_insights=response_data.get('key_insights', []),
+                recommendations=response_data.get('recommendations', []),
+                metadata=NarrativeMetadata(
+                    generation_method=GenerationMethod.CLOUD_AI,
+                    template_version=None,
+                    source_data_hash=self._hash_request_data(request)
+                )
+            )
+        except requests.RequestException as e:
+            logger.error(f"Custom AI endpoint request failed: {str(e)}")
+            raise
+        except Exception as e:
+            logger.error(f"Custom AI endpoint error: {str(e)}")
+            raise
     
     def _find_template_key(self, request: NarrativeRequest) -> Optional[str]:
         """Find the appropriate template key for the request"""

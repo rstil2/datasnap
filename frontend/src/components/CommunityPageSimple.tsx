@@ -4,6 +4,7 @@ import { CommunityStory } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { useData } from '../contexts/DataContext';
 import { FirebaseSignInModal } from './FirebaseSignInModal';
+import { StoryDetailsModal } from './StoryDetailsModal';
 
 interface CommunityPageProps {
   onPageChange?: (page: string) => void;
@@ -17,6 +18,7 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
   const [showSignInModal, setShowSignInModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'recent' | 'trending' | 'popular'>('recent');
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+  const [selectedStoryId, setSelectedStoryId] = useState<string | null>(null);
 
   // Helper function to get human-readable time ago
   const getTimeAgo = (dateString: string): string => {
@@ -267,8 +269,7 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
                   e.currentTarget.style.boxShadow = '';
                 }}
                 onClick={() => {
-                  // TODO: Open story details modal
-                  console.log('Story clicked:', story.title);
+                  setSelectedStoryId(story.id);
                 }}
               >
                 <div className="card-content" style={{ padding: '2rem' }}>
@@ -412,6 +413,15 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
         <FirebaseSignInModal 
           isOpen={showSignInModal} 
           onClose={() => setShowSignInModal(false)} 
+        />
+      )}
+
+      {/* Story Details Modal */}
+      {selectedStoryId && (
+        <StoryDetailsModal
+          isOpen={!!selectedStoryId}
+          storyId={selectedStoryId}
+          onClose={() => setSelectedStoryId(null)}
         />
       )}
     </div>

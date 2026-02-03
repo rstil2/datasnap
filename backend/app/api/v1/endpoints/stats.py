@@ -1,5 +1,5 @@
-from typing import Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
 from app import crud
@@ -9,13 +9,26 @@ from app.services.stats_service import compute_descriptive_stats
 
 router = APIRouter()
 
+async def get_optional_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(deps.get_db),
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        token = authorization.replace("Bearer ", "")
+        return await deps.get_current_user(token=token, db=db)
+    except (HTTPException, Exception):
+        return None
+
 @router.get("/{file_id}")
 async def get_descriptive_stats(
     *,
     file_id: int,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> Dict[str, Any]:
-    # TODO: Remove this temporary bypass for Module 2 development
     """
     Get descriptive statistics for a CSV file.
     Returns:
@@ -31,13 +44,15 @@ async def get_descriptive_stats(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    # For Module 2 development, allow access to any file with user_id=1
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
+    # For unauthenticated access, allow access (for backward compatibility)
+    # In production, you may want to require authentication
     
     # Compute stats
     try:

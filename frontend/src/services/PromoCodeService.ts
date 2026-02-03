@@ -73,10 +73,7 @@ class PromoCodeService {
         };
       }
 
-      // In development mode, return mock validation
-      if (process.env.VITE_DEVELOPMENT_MODE === 'true') {
-        return this.getMockPromoValidation(code, planId);
-      }
+      // Production: validate via API
 
       const response = await fetch('/api/v1/promo-codes/validate', {
         method: 'POST',
@@ -142,10 +139,7 @@ class PromoCodeService {
         };
       }
 
-      // In development mode, return mock application
-      if (process.env.VITE_DEVELOPMENT_MODE === 'true') {
-        return this.getMockPromoApplication(code, planId, validation);
-      }
+      // Production: apply via API
 
       const response = await fetch('/api/v1/promo-codes/apply', {
         method: 'POST',
@@ -192,10 +186,6 @@ class PromoCodeService {
     amountSaved: number;
   }>> {
     try {
-      if (process.env.VITE_DEVELOPMENT_MODE === 'true') {
-        return this.getMockPromoHistory();
-      }
-
       const response = await fetch(`/api/v1/promo-codes/history/${userId}`);
       
       if (!response.ok) {
@@ -223,14 +213,6 @@ class PromoCodeService {
     error?: string;
   }> {
     try {
-      if (process.env.VITE_DEVELOPMENT_MODE === 'true') {
-        const code = this.generateReferralCodeFromName(userName);
-        return {
-          success: true,
-          promoCode: this.createMockReferralCode(code, userId)
-        };
-      }
-
       const response = await fetch('/api/v1/promo-codes/referral/generate', {
         method: 'POST',
         headers: {
@@ -312,159 +294,6 @@ class PromoCodeService {
     }
 
     return { finalPrice, savings };
-  }
-
-  // Mock data and functions for development
-
-  private static getMockPromoValidation(code: string, planId: string): PromoCodeValidationResult {
-    const mockPromoCodes: Record<string, Partial<PromoCode>> = {
-      'WELCOME20': {
-        code: 'WELCOME20',
-        discountType: 'percentage',
-        discountValue: 20,
-        description: '20% off your first subscription'
-      },
-      'SAVE10': {
-        code: 'SAVE10',
-        discountType: 'fixed_amount',
-        discountValue: 1000, // $10 in cents
-        description: '$10 off any plan'
-      },
-      'TRIAL30': {
-        code: 'TRIAL30',
-        discountType: 'free_trial',
-        discountValue: 30,
-        trialExtensionDays: 30,
-        description: 'Extended 30-day free trial'
-      },
-      'EXPIRED': {
-        code: 'EXPIRED',
-        discountType: 'percentage',
-        discountValue: 50,
-        description: 'Expired promo code'
-      }
-    };
-
-    const upperCode = code.toUpperCase();
-    const mockPromo = mockPromoCodes[upperCode];
-
-    if (!mockPromo) {
-      return {
-        isValid: false,
-        error: 'Promo code not found'
-      };
-    }
-
-    if (upperCode === 'EXPIRED') {
-      return {
-        isValid: false,
-        error: 'This promo code has expired'
-      };
-    }
-
-    // Mock price calculation (assuming $15.99 plan)
-    const originalPrice = 1599; // $15.99 in cents
-    const discount = this.calculateDiscountedPrice(originalPrice, mockPromo.discountType!, mockPromo.discountValue!);
-
-    return {
-      isValid: true,
-      promoCode: this.createMockPromoCode(mockPromo),
-      discount: {
-        type: mockPromo.discountType!,
-        value: mockPromo.discountValue!,
-        formattedValue: this.formatDiscount(mockPromo.discountType!, mockPromo.discountValue!),
-        finalPrice: discount.finalPrice,
-        savings: discount.savings
-      }
-    };
-  }
-
-  private static getMockPromoApplication(
-    code: string, 
-    planId: string, 
-    validation: PromoCodeValidationResult
-  ): PromoCodeApplicationResult {
-    if (!validation.discount) {
-      return {
-        success: false,
-        error: 'Invalid discount calculation'
-      };
-    }
-
-    return {
-      success: true,
-      checkoutSessionId: `mock_session_${Date.now()}`,
-      checkoutUrl: `/checkout/mock?code=${code}&plan=${planId}`,
-      appliedDiscount: {
-        originalPrice: 1599,
-        discountAmount: validation.discount.savings,
-        finalPrice: validation.discount.finalPrice,
-        promoCode: code
-      }
-    };
-  }
-
-  private static getMockPromoHistory() {
-    return [
-      {
-        id: 'promo_1',
-        code: 'WELCOME20',
-        usedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-        discountType: 'percentage' as DiscountType,
-        discountValue: 20,
-        planId: 'pro_monthly',
-        amountSaved: 320 // $3.20
-      },
-      {
-        id: 'promo_2',
-        code: 'SAVE10',
-        usedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-        discountType: 'fixed_amount' as DiscountType,
-        discountValue: 1000,
-        planId: 'pro_yearly',
-        amountSaved: 1000 // $10.00
-      }
-    ];
-  }
-
-  private static createMockPromoCode(partial: Partial<PromoCode>): PromoCode {
-    const now = new Date();
-    return {
-      id: `promo_${Math.random().toString(36).substring(7)}`,
-      code: partial.code || 'MOCK',
-      discountType: partial.discountType || 'percentage',
-      discountValue: partial.discountValue || 10,
-      maxRedemptions: 1000,
-      currentRedemptions: 45,
-      validFrom: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-      validUntil: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      applicablePlans: ['pro_monthly', 'pro_yearly'],
-      description: partial.description || 'Mock promo code',
-      isActive: true,
-      firstTimeUsersOnly: false,
-      createdAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-      updatedAt: now
-    };
-  }
-
-  private static createMockReferralCode(code: string, userId: string): PromoCode {
-    const now = new Date();
-    return {
-      id: `referral_${userId}`,
-      code,
-      discountType: 'percentage',
-      discountValue: 15,
-      maxRedemptions: 50,
-      currentRedemptions: 0,
-      validFrom: now,
-      validUntil: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-      applicablePlans: ['pro_monthly', 'pro_yearly'],
-      description: `Referral code - 15% off for new users`,
-      isActive: true,
-      firstTimeUsersOnly: true,
-      createdAt: now,
-      updatedAt: now
-    };
   }
 
   private static generateReferralCodeFromName(userName: string): string {

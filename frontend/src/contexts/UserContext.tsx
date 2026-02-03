@@ -50,15 +50,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     // Final fallback
     displayName = displayName || 'Anonymous';
     
-    console.log('Converting Firebase user:', {
-      uid: firebaseUser.uid,
-      originalDisplayName: firebaseUser.displayName,
-      email: firebaseUser.email,
-      finalDisplayName: displayName,
-      wasDisplayNameBad: !firebaseUser.displayName || 
-        (firebaseUser.displayName && firebaseUser.displayName.length >= 20 && /^[a-zA-Z0-9]+$/.test(firebaseUser.displayName))
-    });
-    
     return {
       id: firebaseUser.uid,
       name: displayName,

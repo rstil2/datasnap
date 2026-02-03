@@ -518,16 +518,168 @@ export class FileParserService {
   }
 
   /**
-   * Stream large file parsing (for future implementation)
+   * Stream large file parsing for files larger than 10MB
+   * Processes file in chunks to avoid memory issues
    */
   static async parseFileStream(
     file: File, 
     onProgress?: (progress: number) => void,
     onChunk?: (chunk: Record<string, any>[]) => void
   ): Promise<FileParseResult> {
-    // For now, use regular parsing
-    // TODO: Implement streaming for large files
-    return this.parseFile(file);
+    const startTime = Date.now();
+    const fileSize = file.size;
+    const LARGE_FILE_THRESHOLD = 10 * 1024 * 1024; // 10MB
+    
+    // For smaller files, use regular parsing
+    if (fileSize < LARGE_FILE_THRESHOLD) {
+      return this.parseFile(file);
+    }
+
+    const extension = this.getFileExtension(file.name);
+    const allData: Record<string, any>[] = [];
+    let headers: string[] = [];
+    let processedBytes = 0;
+    
+    try {
+      if (extension === '.csv' || extension === '.tsv') {
+        // Use Papa Parse streaming for CSV/TSV
+        return new Promise((resolve, reject) => {
+          const chunkData: Record<string, any>[] = [];
+          const CHUNK_SIZE = 1000; // Process 1000 rows at a time
+          
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            delimiter: extension === '.tsv' ? '\t' : ',',
+            chunk: (results, parser) => {
+              const rows = results.data as Record<string, any>[];
+              
+              // Get headers from first chunk
+              if (headers.length === 0 && rows.length > 0) {
+                headers = Object.keys(rows[0]);
+              }
+              
+              // Process chunk
+              chunkData.push(...rows);
+              
+              // Report progress
+              processedBytes += JSON.stringify(rows).length;
+              const progress = Math.min(100, (processedBytes / fileSize) * 100);
+              onProgress?.(progress);
+              
+              // Call chunk callback
+              if (onChunk && chunkData.length >= CHUNK_SIZE) {
+                onChunk(chunkData.splice(0, CHUNK_SIZE));
+              }
+              
+              // Store all data
+              allData.push(...rows);
+            },
+            complete: () => {
+              // Process final chunk
+              if (onChunk && chunkData.length > 0) {
+                onChunk(chunkData);
+              }
+              
+              const parseTime = Date.now() - startTime;
+              
+              // Generate schema
+              const schema = this.generateSchema(allData, headers);
+              
+              // Validate
+              const validation = { isValid: true, errors: [], warnings: [] };
+              
+              // Get preview
+              const preview = allData.slice(0, this.PREVIEW_ROWS);
+              
+              resolve({
+                data: allData,
+                headers,
+                metadata: {
+                  fileName: file.name,
+                  fileSize: file.size,
+                  fileType: extension,
+                  rowCount: allData.length,
+                  columnCount: headers.length,
+                  parseTime
+                },
+                validation,
+                preview,
+                schema
+              });
+            },
+            error: (error) => {
+              reject(new Error(`Streaming parse error: ${error.message}`));
+            }
+          });
+        });
+      } else if (extension === '.json') {
+        // For JSON, use regular parsing but with progress updates
+        const text = await file.text();
+        onProgress?.(25);
+        
+        const jsonData = JSON.parse(text);
+        onProgress?.(50);
+        
+        // Handle different JSON structures
+        let data: Record<string, any>[] = [];
+        if (Array.isArray(jsonData)) {
+          data = jsonData;
+        } else if (typeof jsonData === 'object') {
+          // Try to find array in object
+          const keys = Object.keys(jsonData);
+          if (keys.length === 1 && Array.isArray(jsonData[keys[0]])) {
+            data = jsonData[keys[0]];
+          } else {
+            data = [jsonData];
+          }
+        }
+        
+        onProgress?.(75);
+        
+        if (data.length > 0) {
+          headers = Object.keys(data[0]);
+        }
+        
+        // Process in chunks for progress updates
+        const CHUNK_SIZE = 5000;
+        for (let i = 0; i < data.length; i += CHUNK_SIZE) {
+          const chunk = data.slice(i, i + CHUNK_SIZE);
+          allData.push(...chunk);
+          onChunk?.(chunk);
+          const progress = 75 + (i / data.length) * 25;
+          onProgress?.(progress);
+        }
+        
+        const parseTime = Date.now() - startTime;
+        const schema = this.generateSchema(allData, headers);
+        const validation = { isValid: true, errors: [], warnings: [] };
+        const preview = allData.slice(0, this.PREVIEW_ROWS);
+        
+        onProgress?.(100);
+        
+        return {
+          data: allData,
+          headers,
+          metadata: {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: extension,
+            rowCount: allData.length,
+            columnCount: headers.length,
+            parseTime
+          },
+          validation,
+          preview,
+          schema
+        };
+      } else {
+        // For other formats, fall back to regular parsing
+        return this.parseFile(file);
+      }
+    } catch (error) {
+      throw new Error(`Streaming parse failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 }
 

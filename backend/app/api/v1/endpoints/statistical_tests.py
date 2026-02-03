@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 
 from app import crud
 from app.api import deps
+from app.models.user import User
 from app.schemas.statistical_tests import (
     OneSampleTTestRequest,
     IndependentTTestRequest,
@@ -15,11 +17,25 @@ from app.services.statistical_tests_service import StatisticalTestsService
 
 router = APIRouter()
 
+async def get_optional_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(deps.get_db),
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        token = authorization.replace("Bearer ", "")
+        return await deps.get_current_user(token=token, db=db)
+    except (HTTPException, Exception):
+        return None
+
 
 @router.post("/one_sample_ttest", response_model=StatisticalTestResult)
 async def perform_one_sample_ttest(
     request: OneSampleTTestRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> StatisticalTestResult:
     """
     Perform a one-sample t-test.
@@ -34,13 +50,13 @@ async def perform_one_sample_ttest(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    # For Module 3 development, allow access to any file with user_id=1
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await StatisticalTestsService.one_sample_ttest(
@@ -66,6 +82,7 @@ async def perform_one_sample_ttest(
 async def perform_independent_ttest(
     request: IndependentTTestRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> StatisticalTestResult:
     """
     Perform an independent samples t-test.
@@ -80,13 +97,13 @@ async def perform_independent_ttest(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    # For Module 3 development, allow access to any file with user_id=1
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await StatisticalTestsService.independent_ttest(
@@ -112,6 +129,7 @@ async def perform_independent_ttest(
 async def perform_paired_ttest(
     request: PairedTTestRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> StatisticalTestResult:
     """
     Perform a paired samples t-test.
@@ -126,13 +144,13 @@ async def perform_paired_ttest(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored  
-    # For Module 3 development, allow access to any file with user_id=1
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await StatisticalTestsService.paired_ttest(
@@ -158,6 +176,7 @@ async def perform_paired_ttest(
 async def perform_one_way_anova(
     request: OneWayAnovaRequest,
     db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> StatisticalTestResult:
     """
     Perform a one-way ANOVA.
@@ -172,13 +191,13 @@ async def perform_one_way_anova(
             detail="File not found"
         )
     
-    # TODO: Remove this temporary bypass - check ownership when auth is restored
-    # For Module 3 development, allow access to any file with user_id=1
-    if csv_file.user_id != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="File not found"
-        )
+    # Check ownership if user is authenticated
+    if current_user:
+        if csv_file.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this file"
+            )
     
     try:
         result = await StatisticalTestsService.one_way_anova(

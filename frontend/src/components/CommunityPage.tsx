@@ -59,7 +59,6 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
         // Hide if it contains URLs and is positioned
         if ((text.includes('http') || text.includes('google.com') || text.includes('firebase')) && 
             (style.position === 'absolute' || style.position === 'fixed' || style.zIndex > 100)) {
-          console.log('HIDING URL OVERLAY:', text.substring(0, 50));
           el.style.display = 'none !important';
           el.style.visibility = 'hidden';
           el.style.opacity = '0';
@@ -67,7 +66,6 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
         
         // Also hide any element that's just a plain URL
         if (text.trim().startsWith('http') && text.trim().length > 20) {
-          console.log('HIDING URL TEXT:', text.substring(0, 50));
           el.style.display = 'none !important';
         }
       });
@@ -89,7 +87,6 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
         const text = textNode.textContent || '';
         // More specific pattern for Firebase UIDs
         if (text.length > 20 && /^[a-zA-Z0-9]{20,}$/.test(text.trim()) && !text.includes('http')) {
-          console.log('FOUND FIREBASE ID:', text);
           textNode.textContent = 'User';
         }
       }
@@ -827,13 +824,7 @@ export function CommunityPage({ onPageChange }: CommunityPageProps = {}) {
 
       {/* Story Feed */}
       <div style={{ display: 'grid', gap: 'var(--space-xl)' }}>
-        {filteredStories.map((story, index) => {
-          // Debug: Log the entire story object to see all fields
-          if (index === 0) {
-            console.log('FULL STORY OBJECT:', JSON.stringify(story, null, 2));
-            console.log('ALL STORY KEYS:', Object.keys(story));
-          }
-          return (
+        {filteredStories.map((story) => (
           <div 
             key={story.id} 
             className="card" 

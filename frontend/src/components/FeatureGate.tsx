@@ -139,9 +139,17 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
     navigate('/pricing');
   };
 
-  const handleStartTrial = () => {
-    // TODO: Implement trial start
-    navigate('/pricing');
+  const handleStartTrial = async () => {
+    try {
+      const { SubscriptionService } = await import('../services/SubscriptionService');
+      await SubscriptionService.startFreeTrial();
+      // Navigate to pricing page to see trial status
+      navigate('/pricing');
+    } catch (error) {
+      console.error('Failed to start trial:', error);
+      // Still navigate to pricing page even if trial start fails
+      navigate('/pricing');
+    }
   };
 
   if (compact) {

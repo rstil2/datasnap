@@ -2,20 +2,75 @@
   "appId": "com.datasnap.app",
   "productName": "DataSnap",
   "directories": {
-    "output": "release/"
+    "output": "release/",
+    "buildResources": "build"
   },
   "files": [
     "dist/**/*",
-    "electron/**/*"
+    "electron/**/*",
+    "backend/**/*",
+    "!backend/venv/**/*",
+    "!backend/**/__pycache__/**/*",
+    "!backend/**/*.pyc",
+    "!backend/alembic/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "backend",
+      "to": "backend",
+      "filter": [
+        "**/*",
+        "!venv/**/*",
+        "!**/__pycache__/**/*",
+        "!**/*.pyc"
+      ]
+    }
   ],
   "mac": {
     "category": "public.app-category.developer-tools",
-    "target": ["dmg", "zip"]
+    "target": [
+      {
+        "target": "mas",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": "build/icon.icns",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "build/entitlements.mac.plist",
+    "entitlementsInherit": "build/entitlements.mac.plist",
+    "type": "distribution",
+    "extendInfo": {
+      "NSHumanReadableCopyright": "Copyright © 2024 DataSnap. All rights reserved.",
+      "NSCameraUsageDescription": "DataSnap does not access your camera.",
+      "NSMicrophoneUsageDescription": "DataSnap does not access your microphone.",
+      "NSLocationUsageDescription": "DataSnap does not access your location.",
+      "LSMinimumSystemVersion": "10.15.0"
+    }
+  },
+  "mas": {
+    "category": "public.app-category.developer-tools",
+    "entitlements": "build/entitlements.mas.plist",
+    "entitlementsInherit": "build/entitlements.mas.inherit.plist",
+    "hardenedRuntime": false,
+    "gatekeeperAssess": false,
+    "extendInfo": {
+      "NSHumanReadableCopyright": "Copyright © 2024 DataSnap. All rights reserved."
+    }
   },
   "win": {
     "target": ["nsis", "portable"]
   },
   "linux": {
     "target": ["AppImage", "deb"]
+  },
+  "publish": {
+    "provider": "github",
+    "releaseType": "release"
   }
 }

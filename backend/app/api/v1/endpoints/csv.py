@@ -1,71 +1,97 @@
-import pandas as pd
-import io
-from typing import Dict, Any
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from typing import Dict, Any, Optional
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status, Header
+from sqlalchemy.orm import Session
+
+from app import crud, deps
+from app.models.user import User
+from app.services.csv_processor import process_csv_file, CSVProcessingError
 
 router = APIRouter()
 
+async def get_optional_current_user(
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(deps.get_db),
+) -> Optional[User]:
+    """Get current user if authenticated, otherwise return None"""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    try:
+        token = authorization.replace("Bearer ", "")
+        return await deps.get_current_user(token=token, db=db)
+    except (HTTPException, Exception):
+        return None
+
 @router.post("/upload")
 async def upload_csv(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> Dict[str, Any]:
     """
-    Upload and process a CSV file - simplified version for demo.
+    Upload and process a CSV file.
+    Saves file to disk and creates database record.
     """
     try:
-        # Validate file type
-        if not file.filename.endswith('.csv'):
+        # Require authentication for file uploads in production
+        if not current_user:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only CSV files are allowed"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required to upload files"
             )
         
-        # Read CSV content
-        content = await file.read()
+        # Reset file pointer in case it was already read
+        await file.seek(0)
         
-        # Parse CSV
-        try:
-            df = pd.read_csv(io.StringIO(content.decode('utf-8')))
-        except Exception as e:
+        # Process CSV file using the proper service
+        file_info, preview_data, statistics = await process_csv_file(
+            file=file,
+            user_id=current_user.id,
+            db=db,
+            user_is_premium=False
+        )
+        
+        # The process_csv_file function saves to DB and returns file_info
+        # Get the most recently created file for this user
+        db_files = crud.csv_file.get_by_user(
+            db=db,
+            user_id=current_user.id,
+            limit=1
+        )
+        
+        if not db_files:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Error parsing CSV: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="File was processed but not found in database"
             )
         
-        # Basic validation
-        if len(df) == 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="CSV file is empty"
-            )
-        
-        # Generate basic statistics
-        stats = {
-            "rows": len(df),
-            "columns": len(df.columns),
-            "column_names": df.columns.tolist(),
-            "numeric_columns": df.select_dtypes(include=['number']).columns.tolist(),
-            "categorical_columns": df.select_dtypes(include=['object']).columns.tolist()
-        }
-        
-        # Generate preview data
-        preview = df.head(5).to_dict('records')
+        created_file = db_files[0]
         
         return {
             "message": "File uploaded successfully",
             "file": {
-                "id": 1,  # Mock ID
-                "filename": file.filename
+                "id": created_file.id,
+                "filename": created_file.original_filename
             },
             "statistics": {
-                "total_rows": len(df),
-                "total_columns": len(df.columns),
-                "numeric_columns": df.select_dtypes(include=['number']).columns.tolist(),
-                "categorical_columns": df.select_dtypes(include=['object']).columns.tolist()
+                "total_rows": statistics.get('total_rows', file_info.row_count),
+                "total_columns": len(file_info.columns or []),
+                "numeric_columns": [
+                    col for col, stats in statistics.get('columns', {}).items()
+                    if stats.get('type', '').startswith(('int', 'float'))
+                ],
+                "categorical_columns": [
+                    col for col, stats in statistics.get('columns', {}).items()
+                    if stats.get('type', '').startswith('object')
+                ]
             },
-            "column_preview": preview
+            "column_preview": preview_data
         }
         
+    except CSVProcessingError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -75,8 +101,30 @@ async def upload_csv(
         )
 
 @router.get("/files")
-def list_files():
+async def list_files(
+    db: Session = Depends(deps.get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+) -> Dict[str, Any]:
     """
-    List all CSV files - simplified for demo.
+    List all CSV files for the authenticated user.
     """
-    return {"files": [], "message": "File listing coming soon"}
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+    
+    files = crud.csv_file.get_by_user(db=db, user_id=current_user.id)
+    
+    return {
+        "files": [
+            {
+                "id": f.id,
+                "filename": f.original_filename,
+                "row_count": f.row_count,
+                "columns": f.columns,
+                "created_at": f.created_at.isoformat() if f.created_at else None
+            }
+            for f in files
+        ]
+    }

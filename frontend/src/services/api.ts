@@ -1,30 +1,7 @@
 // API service for connecting to DataSnap backend services
-const API_BASE = 'http://localhost:8000/api/v1';
+import { config } from '../config';
 
-// Development mode - set to true to use mock data instead of real API
-const DEVELOPMENT_MODE = process.env.DEVELOPMENT_MODE === 'true' || process.env.NODE_ENV === 'development';
-
-// Mock data for development
-const createMockCSVFile = (filename: string): CSVFile => ({
-  id: Math.floor(Math.random() * 1000),
-  filename
-});
-
-const generateMockData = (rows = 100) => {
-  const data = [];
-  for (let i = 0; i < rows; i++) {
-    data.push({
-      id: i + 1,
-      name: `Item ${i + 1}`,
-      value: Math.floor(Math.random() * 1000),
-      category: ['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)],
-      date: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
-      rating: Math.random() * 5,
-      active: Math.random() > 0.5
-    });
-  }
-  return data;
-};
+const API_BASE = `${config.apiBaseUrl}/api/v1`;
 
 export interface CSVFile {
   id: number;
@@ -138,27 +115,6 @@ export interface NarrativeResponse {
 class ApiService {
   // CSV Upload and Management
   async uploadCSV(file: File): Promise<FileUploadResponse> {
-    // Development mode - return mock data
-    if (DEVELOPMENT_MODE) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate upload delay
-      
-      const mockData = generateMockData(150);
-      const csvFile = createMockCSVFile(file.name);
-      
-      return {
-        message: `Successfully uploaded ${file.name}`,
-        file: csvFile,
-        statistics: {
-          total_rows: mockData.length,
-          total_columns: Object.keys(mockData[0]).length,
-          numeric_columns: ['id', 'value', 'rating'],
-          categorical_columns: ['name', 'category', 'active']
-        },
-        column_preview: mockData.slice(0, 10)
-      };
-    }
-    
-    // Production mode - actual API call
     const formData = new FormData();
     formData.append('file', file);
     
@@ -190,40 +146,6 @@ class ApiService {
       };
     }
   ): Promise<EnhancedUploadResponse> {
-    // Development mode - return mock response
-    if (DEVELOPMENT_MODE) {
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload delay
-      
-      const fileId = Math.floor(Math.random() * 1000);
-      
-      return {
-        message: `Successfully processed ${metadata.fileName}`,
-        file: {
-          id: fileId,
-          filename: metadata.fileName,
-          file_type: metadata.parseMetadata.fileType,
-          file_size: metadata.parseMetadata.fileSize,
-          upload_time: new Date().toISOString()
-        },
-        metadata: {
-          total_rows: data.length,
-          total_columns: metadata.parseMetadata.columnCount,
-          column_mappings: metadata.columnMappings.reduce((acc, mapping) => {
-            acc[mapping.original] = mapping.mapped;
-            return acc;
-          }, {} as Record<string, string>),
-          original_headers: metadata.columnMappings.map(m => m.original),
-          mapped_headers: metadata.columnMappings.map(m => m.mapped)
-        },
-        validation: {
-          is_valid: true,
-          errors: [],
-          warnings: []
-        }
-      };
-    }
-    
-    // Production mode - actual API call
     const payload = {
       data,
       metadata: {
@@ -637,33 +559,22 @@ class ApiService {
     });
   }
   
-  async performChiSquare(_fileId: CSVFile, _column1: string, _column2: string): Promise<any> {
-    // For now, return a placeholder since chi-square test isn't in the API
-    throw new Error('Chi-square test not yet implemented in backend');
+  async performChiSquare(fileId: CSVFile, column1: string, column2: string): Promise<any> {
+    throw new Error('Chi-square test not yet implemented in backend API');
   }
   
-  async performCorrelation(_fileId: CSVFile, _column1: string, _column2: string): Promise<any> {
-    // For now, return a placeholder since correlation test isn't in the API
-    throw new Error('Correlation test not yet implemented in backend');
+  async performCorrelation(fileId: CSVFile, column1: string, column2: string): Promise<any> {
+    throw new Error('Correlation test not yet implemented in backend API');
   }
   
-  async createCorrelationHeatmap(_fileId: CSVFile): Promise<any> {
-    // For now, return a placeholder since correlation heatmap isn't in the API
-    throw new Error('Correlation heatmap not yet implemented in backend');
+  async createCorrelationHeatmap(fileId: CSVFile): Promise<any> {
+    throw new Error('Correlation heatmap not yet implemented in backend API');
   }
   
   async generateNarrative(fileId: CSVFile): Promise<any> {
-    // Use the data summary narrative as a placeholder
-    return this.generateDataSummaryNarrative({
-      narrative_type: 'data_summary',
-      total_rows: 0,
-      total_columns: 0,
-      numeric_columns: 0,
-      categorical_columns: 0,
-      missing_values_percent: 0,
-      data_quality_score: 0,
-      context: `Analysis of file: ${fileId.filename}`
-    });
+    // Generate data summary narrative for the file
+    // In production, this would fetch actual file statistics from the backend
+    throw new Error('File statistics required to generate narrative. Use generateDataSummaryNarrative with actual data.');
   }
   
   // Helper methods for visualization calls from components

@@ -64,9 +64,9 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      devTools: true, // Enable dev tools for debugging
-      webSecurity: false, // Disable to prevent security overlays
-      sandbox: false,
+      devTools: isDev, // Only enable dev tools in development
+      webSecurity: !isDev, // Enable web security in production
+      sandbox: !isDev, // Enable sandbox in production for App Store
       // Additional options to hide web elements
       allowRunningInsecureContent: false,
       experimentalFeatures: false,

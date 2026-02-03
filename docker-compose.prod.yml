@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_ENV: production
+    environment:
+      - NODE_ENV=production
+      - API_BASE_URL=/api
+      - VITE_API_URL=/api
+    ports:
+      - "80:3000"
+    volumes:
+      - ./frontend/dist:/app/dist
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./backend:/app
+      - ./uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://datasnap:${DB_PASSWORD}@db:5432/datasnap
+      - SECRET_KEY=${SECRET_KEY}
+      - ENVIRONMENT=production
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=datasnap
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=datasnap
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U datasnap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+

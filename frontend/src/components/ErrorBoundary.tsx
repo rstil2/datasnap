@@ -58,10 +58,38 @@ export class ErrorBoundary extends Component<Props, State> {
       // Ignore localStorage errors
     }
     
-    // TODO: Send to monitoring service (Sentry, LogRocket, etc.)
-    // if (process.env.VITE_SENTRY_DSN) {
-    //   Sentry.captureException(error, { contexts: { react: errorInfo } });
-    // }
+    // Send to monitoring service if configured
+    // Note: This requires @sentry/react to be installed and configured
+    if (process.env.VITE_SENTRY_DSN) {
+      // Use dynamic import with proper error handling
+      // This will only work if @sentry/react is installed
+      try {
+        // Check if Sentry is available at runtime
+        if (typeof window !== 'undefined' && (window as any).Sentry) {
+          (window as any).Sentry.captureException(error, { contexts: { react: errorInfo } });
+        }
+      } catch (e) {
+        // Sentry not available or not configured, silently fail
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Sentry error tracking configured but not available. Install @sentry/react to enable.');
+        }
+      }
+    }
+    
+    // Alternative: Send to custom error tracking endpoint
+    if (process.env.VITE_ERROR_TRACKING_URL) {
+      try {
+        fetch(process.env.VITE_ERROR_TRACKING_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(errorReport)
+        }).catch(() => {
+          // Silently fail if error tracking endpoint is unavailable
+        });
+      } catch (e) {
+        // Ignore errors in error reporting
+      }
+    }
   }
 
   render() {

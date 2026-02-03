@@ -17,11 +17,10 @@ export interface AppConfig {
   apiBaseUrl: string;
   apiTimeout: number;
   
-  // Feature Flags
-  enableAnalytics: boolean;
-  enableErrorReporting: boolean;
-  enablePerformanceMonitoring: boolean;
-  developmentMode: boolean;
+    // Feature Flags
+    enableAnalytics: boolean;
+    enableErrorReporting: boolean;
+    enablePerformanceMonitoring: boolean;
   
   // Limits
   maxFileSize: number;
@@ -61,9 +60,33 @@ const parseNumber = (value: string | undefined, defaultValue: number): number =>
   return isNaN(parsed) ? defaultValue : parsed;
 };
 
+// Detect if running in Electron
+const isElectron = typeof window !== 'undefined' && (
+  (window as any).process?.type === 'renderer' ||
+  (window as any).electron !== undefined ||
+  navigator.userAgent.includes('Electron')
+);
+
 // Create configuration object from environment variables
 const createConfig = (): AppConfig => {
   const nodeEnv = (process.env.NODE_ENV || 'development') as AppConfig['nodeEnv'];
+  
+  // Determine API base URL
+  // In Electron (including App Store builds), always use localhost for bundled backend
+  // Or use remote API URL if configured
+  let apiBaseUrl = process.env.API_BASE_URL;
+  if (!apiBaseUrl) {
+    if (isElectron) {
+      // Electron: use localhost for bundled backend, or remote API if provided
+      apiBaseUrl = process.env.VITE_API_URL || 'http://localhost:8000';
+    } else if (nodeEnv === 'production') {
+      // Web production: use relative path or configured URL
+      apiBaseUrl = '/api';
+    } else {
+      // Development: use localhost
+      apiBaseUrl = 'http://localhost:8000';
+    }
+  }
   
   return {
     // Environment
@@ -76,14 +99,13 @@ const createConfig = (): AppConfig => {
     appVersion: process.env.APP_VERSION || '1.0.0',
     
     // API Configuration
-    apiBaseUrl: process.env.API_BASE_URL || (nodeEnv === 'production' ? '/api' : 'http://localhost:8000'),
+    apiBaseUrl,
     apiTimeout: parseNumber(process.env.API_TIMEOUT, nodeEnv === 'production' ? 30000 : 10000),
     
     // Feature Flags
     enableAnalytics: parseBool(process.env.ENABLE_ANALYTICS, nodeEnv === 'production'),
     enableErrorReporting: parseBool(process.env.ENABLE_ERROR_REPORTING, nodeEnv === 'production'),
     enablePerformanceMonitoring: parseBool(process.env.ENABLE_PERFORMANCE_MONITORING, nodeEnv === 'production'),
-    developmentMode: parseBool(process.env.DEVELOPMENT_MODE, nodeEnv === 'development'),
     
     // Limits
     maxFileSize: parseNumber(process.env.MAX_FILE_SIZE, nodeEnv === 'production' ? 52428800 : 104857600), // 50MB prod, 100MB dev
@@ -142,7 +164,4 @@ export const validateFileSize = (fileSize: number): { valid: boolean; message?: 
   return { valid: true };
 };
 
-// Log configuration in development
-if (config.isDevelopment) {
-  console.log('🔧 DataSnap Configuration:', config);
-}
+// Configuration is ready - no logging in production
