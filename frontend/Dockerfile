@@ -23,6 +23,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Render uses PORT env var
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+# Use PORT environment variable
+CMD sed -i "s/listen 80;/listen ${PORT:-80};/g" /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'
