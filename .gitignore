@@ -60,3 +60,7 @@ frontend/.env
 # Docker
 .docker/
 .env
+
+# Firebase / Google Cloud
+*service-account-key.json
+firebase-service-account.json
